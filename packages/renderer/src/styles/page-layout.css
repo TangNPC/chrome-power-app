@@ -1,0 +1,141 @@
+/* ==================== 页面容器样式 ==================== */
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* padding: 10px; */
+}
+
+.page-toolbar {
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.page-card {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.log-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Content 区域通用 padding */
+.ant-layout-content {
+  padding: 10px;
+}
+
+/* ==================== Header 样式 ==================== */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(5, 5, 5, 0.06);
+  padding: 0 0 0 24px;
+  height: 38px;
+}
+
+.header-drag-area {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.header-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.header-breadcrumb {
+  margin-left: 10px;
+  font-size: 13px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  height: 38px;
+}
+
+/* 窗口控制按钮 */
+.window-btn {
+  border: none !important;
+  background: transparent !important;
+  color: #333 !important;
+  border-radius: 0 !important;
+  height: 38px !important;
+  width: 46px !important;
+}
+
+.window-btn:hover {
+  background: rgba(26, 26, 26, 0.13) !important;
+}
+
+.window-btn-close:hover {
+  background: #c42b1c !important;
+  color: #fff !important;
+}
+
+/* ==================== 日志页面样式 ==================== */
+
+.log-terminal {
+  padding: 24;
+  background: #1e1e1e;
+  border-radius: 8px;
+  color: white;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+}
+
+.log-header {
+  margin-bottom: 16px;
+}
+
+.log-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.log-dot-red {
+  background: #ef4444;
+}
+
+.log-dot-yellow {
+  background: #eab308;
+}
+
+.log-dot-green {
+  background: #22c55e;
+}
+
+.log-line {
+  line-height: 1.6;
+}
+
+.log-level-error {
+  color: #fbbf24;
+}
+
+.log-level-warn {
+  color: #facc15;
+}
+
+.log-level-info {
+  color: #4ade80;
+}
+
+/* ==================== Sider/Navigation 样式 ==================== */
+
+.app-sider {
+  background: #fff !important;
+}
+
+.app-nav-item {
+  height: 44px;
+  line-height: 44px;
+}

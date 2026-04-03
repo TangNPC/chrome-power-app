@@ -1,0 +1,56 @@
+/* 全局样式 - 最小化，使用 antd 原生能力 */
+@import './styles/page-layout.css';
+
+html {
+  background-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  background: transparent;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  background-image: url("./assets/bg2.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 100vh;
+}
+
+/* 滚动条样式 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d6dee1 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d6dee1;
+  border-radius: 4px;
+}
+
+/* App 淡入动画 */
+.fade-in {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.fade-in.visible {
+  opacity: 1;
+}
+
+/* 拖拽区域 */
+.draggable {
+  -webkit-app-region: drag;
+}
