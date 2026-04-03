@@ -4,7 +4,7 @@
 
 ---
 
-首款开源指纹浏览器 Chrome 多开管理工具。基于 Puppeteer、Electron、React 开发。
+首款开源~~指纹浏览器~~ Chrome 多开管理工具。基于 Puppeteer、Electron、React 开发。
 
 此软件遵循 AGPL 协议，因此如果你想对其进行修改发布，请保持开源。
 
@@ -69,13 +69,4 @@ Chromium 源码修改请参考 [chrome-power-chromium](https://github.com/zmzimp
 
 Mac 自动排列需要辅助功能权限，可以查看运行日志，如果提示缺少权限，请在设置 - 辅助功能中开启。
 
-## 打赏
-
-🙌你可以通过向下面的钱包打赏一杯咖啡来支持我
-
-Ethereum Address: `0x83DF381FF65806B68AA1963636f4ca87990F2860`
-
-Solana Address: `HYKo3uVuCQzWkWUkGcGwiDAAsxPYyJZtjf28Xk143eb1`
-
-Bitcoin Address: `bc1p0uex9rn8nd9uyguulp6r3d3t9kylrk42dg6sq22f3h5rktlk22ks6mlv6t`
 
