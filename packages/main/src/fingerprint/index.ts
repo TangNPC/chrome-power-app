@@ -3,7 +3,7 @@ import {ProxyDB} from '../db/proxy';
 import {WindowDB} from '../db/window';
 // import {getChromePath} from './device';
 import {BrowserWindow} from 'electron';
-import puppeteer from 'puppeteer';
+import puppeteer, {Browser} from 'puppeteer';
 import {execSync, spawn} from 'child_process';
 import * as portscanner from 'portscanner';
 import {sleep} from '../utils/sleep';
@@ -107,6 +107,101 @@ const getDriverPath = (windowData?: DB.Window) => {
     return settings.localChromePath;
   } else {
     return settings.chromiumBinPath;
+  }
+};
+
+/**
+ * 根据窗口索引自动设置窗口位置，实现层叠排列
+ */
+const setWindowBounds = async (browser: Browser, windowIndex: number) => {
+  try {
+    const page = (await browser.pages())[0];
+    if (!page) return;
+
+    // 通过 CDP 获取窗口信息
+    const client = await page.createCDPSession();
+    const { windowId } = await client.send('Browser.getWindowForTarget', {
+      targetId: (page.target() as any)._targetId,
+    });
+
+    // 窗口尺寸
+    const windowWidth = 450;
+    const windowHeight = 600;
+    // 层叠偏移量
+    const cascadeOffset = 20;
+
+    // 计算层叠位置
+    const left = windowIndex * cascadeOffset;
+    const top = windowIndex * cascadeOffset;
+
+    await client.send('Browser.setWindowBounds', {
+      windowId,
+      bounds: {
+        left: left,
+        top: top,
+        width: windowWidth,
+        height: windowHeight,
+      },
+    });
+
+    logger.info(`Window positioned at (${left}, ${top}) with size ${windowWidth}x${windowHeight}`);
+    await client.detach();
+  } catch (error) {
+    logger.error('Failed to set window bounds:', error);
+  }
+};
+
+/**
+ * 通过 CDP 设置书签栏显示并添加书签
+ */
+const setupBookmarksBar = async (browser: Browser, bookmarks: Array<{title: string; url: string}>) => {
+  try {
+    const page = (await browser.pages())[0];
+    if (!page) return;
+
+    const isMac = process.platform === 'darwin';
+    
+    // 1. 尝试通过快捷键打开书签栏
+    // Ctrl+Shift+B 是 Windows/Linux 切换书签栏显示的快捷键
+    // Cmd+Shift+B 是 Mac 的快捷键
+    if (isMac) {
+      await page.keyboard.down('Meta');
+      await page.keyboard.down('Shift');
+      await page.keyboard.press('b');
+      await page.keyboard.up('Shift');
+      await page.keyboard.up('Meta');
+    } else {
+      await page.keyboard.down('Control');
+      await page.keyboard.down('Shift');
+      await page.keyboard.press('b');
+      await page.keyboard.up('Shift');
+      await page.keyboard.up('Control');
+    }
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // 2. 如果有书签需要添加，导航到第一个页面后添加书签
+    if (bookmarks.length > 0) {
+      // 先导航到第一个书签的URL
+      await page.goto(bookmarks[0].url, { waitUntil: 'networkidle2', timeout: 30000 });
+      
+      // 使用快捷键添加书签 Ctrl+D / Cmd+D
+      if (isMac) {
+        await page.keyboard.down('Meta');
+        await page.keyboard.press('d');
+        await page.keyboard.up('Meta');
+      } else {
+        await page.keyboard.down('Control');
+        await page.keyboard.press('d');
+        await page.keyboard.up('Control');
+      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      await page.keyboard.press('Escape');
+    }
+    
+    logger.info('Bookmarks bar configured successfully');
+  } catch (error) {
+    logger.error('Failed to setup bookmarks bar:', error);
   }
 };
 
@@ -375,6 +470,32 @@ export async function openFingerprintWindow(id: number, headless = false) {
       try {
         const browserURL = `http://${HOST}:${chromePort}`;
         const {data} = await api.get(browserURL + '/json/version');
+        
+        // 设置窗口位置，避免堆叠，并显示书签栏
+        try {
+          const browser = await puppeteer.connect({
+            browserWSEndpoint: data.webSocketDebuggerUrl,
+            defaultViewport: null,
+          });
+          // 获取当前已打开的窗口数量，作为当前窗口的索引
+          const openWindows = (await WindowDB.all()) as DB.Window[];
+          const openCount = openWindows.filter((w: DB.Window) => w.status === 2 && w.id !== windowData.id).length;
+          await setWindowBounds(browser, openCount);
+          
+          // 设置书签栏
+          const bookmarks = windowData.bookmarks || [];
+          if (bookmarks.length > 0) {
+            await setupBookmarksBar(browser, bookmarks);
+          } else {
+            // 即使没有预设书签，也显示书签栏
+            await setupBookmarksBar(browser, []);
+          }
+          
+          await browser.disconnect();
+        } catch (boundsError) {
+          logger.error('Failed to set window bounds:', boundsError);
+        }
+        
         const now = new Date().toISOString();
         logger.info(`Updating window ${windowData.id} with opened_at: ${now}`);
         const updateResult = await WindowDB.update(windowData.id, {
@@ -538,9 +659,66 @@ export async function closeFingerprintWindow(id: number, force = false) {
   }
 }
 
+/**
+ * 将指定窗口聚焦并置顶到最前面
+ */
+export async function focusFingerprintWindow(id: number) {
+  const windowData = await WindowDB.getById(id);
+  
+  if (!windowData || windowData.status !== 2 || !windowData.port) {
+    logger.warn(`Window ${id} is not running, cannot focus`);
+    return { success: false, message: 'Window is not running' };
+  }
+
+  try {
+    const browserURL = `http://${HOST}:${windowData.port}`;
+    const {data} = await api.get(browserURL + '/json/version');
+    
+    if (data) {
+      const browser = await puppeteer.connect({
+        browserWSEndpoint: data.webSocketDebuggerUrl,
+        defaultViewport: null,
+      });
+      const pages = await browser.pages();
+      if (pages.length > 0) {
+        const page = pages[0];
+        
+        // 使用 CDP 获取窗口 ID
+        const client = await page.createCDPSession();
+        const { windowId } = await client.send('Browser.getWindowForTarget', {
+          targetId: (page.target() as any)._targetId,
+        });
+        
+        // 先最小化再恢复，确保窗口置顶
+        await client.send('Browser.setWindowBounds', {
+          windowId,
+          bounds: { windowState: 'minimized' },
+        });
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await client.send('Browser.setWindowBounds', {
+          windowId,
+          bounds: { windowState: 'normal' },
+        });
+        
+        await client.detach();
+        logger.info(`Window ${id} focused and brought to top`);
+      }
+      await browser.disconnect();
+      return { success: true };
+    }
+  } catch (error) {
+    logger.error(`Failed to focus window ${id}:`, error);
+    return { success: false, message: String(error) };
+  }
+
+  return { success: false, message: 'Window not accessible' };
+}
+
 export default {
   openFingerprintWindow,
 
   closeFingerprintWindow,
+  
+  focusFingerprintWindow,
 };
 

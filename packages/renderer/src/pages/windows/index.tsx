@@ -621,6 +621,14 @@ const Windows = () => {
           dataSource={windowData}
           scroll={{ x: 1500, y: tableScrollY }}
           pagination={false}
+          onRow={(record) => ({
+            onDoubleClick: async () => {
+              if (record.status === 2 && record.id) {
+                // 窗口正在运行，双击找到并聚焦
+                await WindowBridge.focus(record.id);
+              }
+            },
+          })}
         />
       </Card>
       <Flex justify="flex-end" align="center" className="page-pagination">

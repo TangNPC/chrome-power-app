@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import type {IWindowTemplate} from '../types/window-template';
 import type {DB, SafeAny} from '../../../shared/types/db';
 import {WindowDB} from '../db/window';
-import {closeFingerprintWindow, openFingerprintWindow} from '../fingerprint/index';
+import {closeFingerprintWindow, focusFingerprintWindow, openFingerprintWindow} from '../fingerprint/index';
 import {createLogger} from '../../../shared/utils/logger';
 import {SERVICE_LOGGER_LABEL} from '../constants';
 import {randomASCII, randomFloat, randomInt} from '../../../shared/utils';
@@ -117,6 +117,10 @@ export const initWindowService = () => {
   });
   ipcMain.handle('window-close', async (_, id: number, force = false) => {
     return await closeFingerprintWindow(id, force);
+  });
+
+  ipcMain.handle('window-focus', async (_, id: number) => {
+    return await focusFingerprintWindow(id);
   });
 
   ipcMain.handle('window-set-cookie', async (_, id: number) => {

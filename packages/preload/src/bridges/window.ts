@@ -56,6 +56,11 @@ export const WindowBridge = {
     return result;
   },
 
+  async focus(id: number) {
+    const result = await ipcRenderer.invoke('window-focus', id);
+    return result;
+  },
+
   async toogleSetCookie(id: number) {
     const result = await ipcRenderer.invoke('window-set-cookie', id);
     return result;
