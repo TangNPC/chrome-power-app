@@ -10,6 +10,7 @@ type FieldType = {
   localChromePath: string;
   chromiumBinPath: string;
   automationConnect: boolean;
+  chromeLaunchArgs?: string;
 };
 
 const Settings = () => {
@@ -19,6 +20,7 @@ const Settings = () => {
     localChromePath: '',
     chromiumBinPath: '',
     automationConnect: false,
+    chromeLaunchArgs: '',
   });
   const [form] = Form.useForm();
   const {t} = useTranslation();
@@ -82,6 +84,18 @@ const Settings = () => {
               <Input readOnly disabled value={formValue.chromiumBinPath} />
               <Button type="default" onClick={() => handleChoosePath('chromiumBinPath', 'openFile')}>{t('settings_choose_cache_path')}</Button>
             </Space.Compact>
+          </Form.Item>
+          <Form.Item<FieldType>
+            label={t('settings_chrome_launch_args')}
+            name="chromeLaunchArgs"
+            extra={t('settings_chrome_launch_args_tip')}
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder="--restore-last-session&#10;--disable-extensions"
+              value={formValue.chromeLaunchArgs}
+              onChange={(e) => handleFormValueChange({...formValue, chromeLaunchArgs: e.target.value})}
+            />
           </Form.Item>
         </Form>
       </Card>

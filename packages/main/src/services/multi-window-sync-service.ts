@@ -266,9 +266,14 @@ class MultiWindowSyncService {
         height: masterBounds.height,
         pid: this.masterWindowPid,
       };
+      logger.info(`Master window bounds: PID=${this.masterWindowPid}, ${masterBounds.x},${masterBounds.y} ${masterBounds.width}x${masterBounds.height}`);
+    } else {
+      logger.warn(`Master window bounds not found: PID=${this.masterWindowPid}`);
     }
 
     // Get slave window bounds
+    let foundSlaves = 0;
+    let missingSlaves = 0;
     for (const slavePid of this.slaveWindowPids) {
       const slaveBounds = this.windowManager.getWindowBounds(slavePid);
       if (slaveBounds.success) {
@@ -279,8 +284,13 @@ class MultiWindowSyncService {
           height: slaveBounds.height,
           pid: slavePid,
         });
+        foundSlaves++;
+      } else {
+        missingSlaves++;
+        logger.warn(`Slave window bounds not found: PID=${slavePid}`);
       }
     }
+    logger.info(`Slave windows: found=${foundSlaves}, missing=${missingSlaves}, total selected=${this.slaveWindowPids.size}`);
   }
 
   /**
@@ -434,13 +444,9 @@ class MultiWindowSyncService {
 
       const {x, y, button} = event;
 
-      // Check if master window is active (foreground)
-      if (!this.windowManager.isProcessWindowActive(this.masterWindowPid)) {
-        devLogger.debug('Master window not active - skipping mouse event');
-        return;
-      }
-
       // Check if mouse is within master window OR its extension windows
+      // Note: We rely on this check instead of isProcessWindowActive
+      // because Chrome may not always report as foreground during input
       if (!this.isMouseInMasterOrExtension(x, y)) {
         devLogger.debug('Mouse not in master window or extension - skipping');
         return;
@@ -538,13 +544,9 @@ class MultiWindowSyncService {
 
       const {x, y, button} = event;
 
-      // Check if master window is active (foreground)
-      if (!this.windowManager.isProcessWindowActive(this.masterWindowPid)) {
-        devLogger.debug('Master window not active - skipping mouse event');
-        return;
-      }
-
       // Check if mouse is within master window OR its extension windows
+      // Note: We rely on this check instead of isProcessWindowActive
+      // because Chrome may not always report as foreground during input
       if (!this.isMouseInMasterOrExtension(x, y)) {
         devLogger.debug('Mouse not in master window or extension - skipping');
         return;
@@ -796,10 +798,10 @@ class MultiWindowSyncService {
         return;
       }
 
-      // Only sync keyboard events when master window is the active foreground window
-      // This is more accurate than mouse position checking
-      if (!this.windowManager.isProcessWindowActive(this.masterWindowPid)) {
-        devLogger.debug('Keydown skipped: master window not active');
+      // Only sync keyboard events when mouse is in master window
+      // This ensures user is actually typing in the master window
+      if (!this.isMouseInMasterOrExtension(this.lastMouseX, this.lastMouseY)) {
+        devLogger.debug('Keydown skipped: mouse not in master window');
         return;
       }
 

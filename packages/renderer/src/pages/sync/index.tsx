@@ -370,6 +370,33 @@ const Sync = () => {
     message.success(t('sync_msg_arranged'));
   };
 
+  const handleCascadeWindows = () => {
+    if (!windows.length) {
+      message.warning(t('sync_msg_no_windows'));
+      return;
+    }
+
+    if (selectedRowKeys.length === 0) {
+      message.warning(t('sync_msg_select_windows'));
+      return;
+    }
+
+    const selectedWindows = windows.filter(w => selectedRowKeys.includes(w.id!));
+    const pids = selectedWindows.map(w => w.pid!);
+    const cascadeOffset = syncConfig.spacing || 20;
+    const cascadeWidth = syncConfig.size.width || 450;
+    const cascadeHeight = syncConfig.size.height || 600;
+
+    SyncBridge.cascadeWindows({
+      pids,
+      offset: cascadeOffset,
+      size: { width: cascadeWidth, height: cascadeHeight },
+      startOffset: { x: -8, y: 0 }, // 补偿窗口边框
+    });
+    saveSyncConfig();
+    message.success(t('sync_msg_arranged'));
+  };
+
   const onArrangeValuesChange = (_: any, allFields: any) => {
     const newConfig = {
       ...syncConfig,
@@ -452,6 +479,13 @@ const Sync = () => {
             scroll={{y: tableScrollY}}
             columns={columns}
             pagination={false}
+            onRow={(record) => ({
+              onDoubleClick: async () => {
+                if (record.id) {
+                  await WindowBridge.focus(record.id);
+                }
+              },
+            })}
           />
         </Card>
 
@@ -488,6 +522,9 @@ const Sync = () => {
 
             <Button block type="primary" icon={<WindowsOutlined />} onClick={handleArrangeWindows} disabled={selectedRowKeys.length === 0}>
               {t('sync_arrange_button')}
+            </Button>
+            <Button block type="default" icon={<DesktopOutlined />} onClick={handleCascadeWindows} disabled={selectedRowKeys.length === 0} style={{marginTop: 8}}>
+              {t('sync_cascade_button')}
             </Button>
           </Space>
         </Card>

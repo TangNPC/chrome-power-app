@@ -21,7 +21,7 @@ export interface MonitorInfo {
 }
 
 export const SyncBridge = {
-  // Window arrangement (legacy)
+  // Window arrangement (grid layout)
   arrangeWindows: (args: {
     mainPid: number;
     childPids: number[];
@@ -31,6 +31,16 @@ export const SyncBridge = {
     monitorIndex?: number;
   }) => {
     return ipcRenderer.invoke('window-arrange', args);
+  },
+
+  // Window cascade arrangement (offset layout)
+  cascadeWindows: (args: {
+    pids: number[];
+    offset: number;
+    size: {width: number; height: number};
+    startOffset?: {x: number; y: number};
+  }) => {
+    return ipcRenderer.invoke('window-cascade', args);
   },
 
   // Get available monitors

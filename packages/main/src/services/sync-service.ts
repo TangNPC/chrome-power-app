@@ -4,6 +4,10 @@ import type {SafeAny} from '../../../shared/types/db';
 import { createLogger } from '../../../shared/utils/logger';
 import { MAIN_LOGGER_LABEL } from '../constants';
 import { dialog } from 'electron';
+import puppeteer from 'puppeteer';
+import api from '../../../shared/api/api';
+import {HOST} from '../mainWindow';
+
 const logger = createLogger(MAIN_LOGGER_LABEL);
 let addon: unknown;
 if (!app.isPackaged) {
@@ -85,6 +89,35 @@ export const initSyncService = () => {
       return {success: true};
     } catch (error) {
       logger.error('Window arrangement failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  // Window cascade arrangement handler
+  ipcMain.handle('window-cascade', async (_, args) => {
+    const {pids, offset, size, startOffset} = args;
+    logger.info('Cascading windows', {pids, offset, size, startOffset});
+    try {
+      if (!windowManager) {
+        logger.error('WindowManager not initialized');
+        throw new Error('WindowManager not initialized');
+      }
+
+      const startX = startOffset?.x || 0;
+      const startY = startOffset?.y || 0;
+
+      pids.forEach((pid, index) => {
+        const left = startX + index * offset;
+        const top = startY + index * offset;
+        windowManager.setWindowBounds(pid, left, top, size.width, size.height);
+      });
+
+      return {success: true};
+    } catch (error) {
+      logger.error('Window cascade failed:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

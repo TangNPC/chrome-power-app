@@ -10,12 +10,13 @@ export const getSettings = (): SettingOptions => {
   const defaultCachePath = isMac
     ? `${app.getPath('documents')}/ChromePowerCache`
     : join(app.getPath('appData'), 'ChromePowerCache');
-  let settings = {
+  let settings: SettingOptions = {
     profileCachePath: defaultCachePath,
     useLocalChrome: true,
     localChromePath: '',
     chromiumBinPath: '',
     automationConnect: false,
+    chromeLaunchArgs: '',
   };
 
   try {

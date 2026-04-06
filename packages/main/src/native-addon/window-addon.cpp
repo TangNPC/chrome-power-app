@@ -81,6 +81,7 @@ public:
             InstanceMethod("sendKeyboardEvent", &WindowManager::SendKeyboardEvent),
             InstanceMethod("sendWheelEvent", &WindowManager::SendWheelEvent),
             InstanceMethod("getWindowBounds", &WindowManager::GetWindowBounds),
+            InstanceMethod("setWindowBounds", &WindowManager::SetWindowBounds),
             InstanceMethod("getAllWindows", &WindowManager::GetAllWindows),
             InstanceMethod("getMonitors", &WindowManager::GetMonitorsJS),
             InstanceMethod("isProcessWindowActive", &WindowManager::IsProcessWindowActive)
@@ -803,6 +804,76 @@ private:
         if (!result.Has("success")) {
             result.Set("success", Napi::Boolean::New(env, false));
         }
+
+        return result;
+    }
+
+    // Set window bounds by PID
+    Napi::Value SetWindowBounds(const Napi::CallbackInfo& info) {
+        Napi::Env env = info.Env();
+
+        if (info.Length() < 5) {
+            Napi::TypeError::New(env, "Wrong number of arguments: expected pid, x, y, width, height");
+            return env.Undefined();
+        }
+
+        int pid = info[0].As<Napi::Number>().Int32Value();
+        int x = info[1].As<Napi::Number>().Int32Value();
+        int y = info[2].As<Napi::Number>().Int32Value();
+        int width = info[3].As<Napi::Number>().Int32Value();
+        int height = info[4].As<Napi::Number>().Int32Value();
+
+        Napi::Object result = Napi::Object::New(env);
+
+#ifdef _WIN32
+        auto windows = FindWindowsByPid(pid);
+        if (!windows.empty()) {
+            WindowInfo* mainWindow = nullptr;
+            for (auto& win : windows) {
+                if (!win.isExtension) {
+                    mainWindow = &win;
+                    break;
+                }
+            }
+
+            if (mainWindow) {
+                bool success = ArrangeWindow(mainWindow->hwnd, x, y, width, height);
+                result.Set("success", Napi::Boolean::New(env, success));
+                if (!success) {
+                    result.Set("error", Napi::String::New(env, "Failed to set window bounds"));
+                }
+                return result;
+            }
+        }
+        result.Set("success", Napi::Boolean::New(env, false));
+        result.Set("error", Napi::String::New(env, "Window not found"));
+#elif __APPLE__
+        auto windows = GetWindowsForPid(pid);
+        if (!windows.empty()) {
+            WindowInfo* mainWindow = nullptr;
+            for (auto& win : windows) {
+                if (!win.isExtension) {
+                    mainWindow = &win;
+                    break;
+                }
+            }
+
+            if (mainWindow) {
+                bool success = ArrangeWindow(pid, x, y, width, height);
+                CFRelease(mainWindow->window);
+                result.Set("success", Napi::Boolean::New(env, success));
+                if (!success) {
+                    result.Set("error", Napi::String::New(env, "Failed to set window bounds"));
+                }
+                return result;
+            }
+        }
+        result.Set("success", Napi::Boolean::New(env, false));
+        result.Set("error", Napi::String::New(env, "Window not found"));
+#else
+        result.Set("success", Napi::Boolean::New(env, false));
+        result.Set("error", Napi::String::New(env, "Not supported on this platform"));
+#endif
 
         return result;
     }
