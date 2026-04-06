@@ -38,6 +38,9 @@ module.exports = async function () {
       'node_modules/@tkomde/iohook/**/*.node',
       'node_modules/iconv-corefoundation/lib/*.node',
       'buildResources/**/*',
+      '!**/*.map', // 排除调试文件
+      '!**/*.ts',
+      '!**/*.tsx',
     ],
     extraResources: [
       {
@@ -71,6 +74,8 @@ module.exports = async function () {
         },
       ],
       artifactName: '${productName}-${version}-${arch}-${os}-' + getBuildTime() + '.${ext}',
+      signAndEditExecutable: false,
+      compression: 'maximum', // 最大压缩（安装包会更小，但打包时间更长）
     },
     nsis: {
       oneClick: false,
@@ -113,36 +118,6 @@ module.exports = async function () {
       writeUpdateInfo: false,
       format: 'ULFO',
     },
-    // 自编译不需要签名也行
-    // mac: {
-    //   identity: null,
-    //   target: ['dmg', 'zip'],
-    //   category: 'public.app-category.developer-tools',
-    //   icon: 'buildResources/icon.icns',
-    //   hardenedRuntime: true,
-    //   gatekeeperAssess: false,
-    //   entitlements: 'buildResources/entitlements.mac.plist',
-    //   entitlementsInherit: 'buildResources/entitlements.mac.plist'
-    // },
-    // dmg: {
-    //   sign: false
-    // },
-    // afterSign: async context => {
-    //   const { electronPlatformName, appOutDir } = context;
-    //   if (electronPlatformName === 'darwin') {
-    //     const appName = context.packager.appInfo.productFilename;
-
-    //     return await notarize({
-    //       tool: 'notarytool',
-    //       identity: process.env.APPLE_IDENTITY,
-    //       teamId: process.env.APPLE_TEAM_ID,
-    //       appBundleId: 'com.chrome-power.app',
-    //       appPath: `${appOutDir}/${appName}.app`,
-    //       appleId: process.env.APPLE_ID,
-    //       appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
-    //     });
-    //   }
-    // },
 
     // 添加 GitHub 发布配置
     publish: {
@@ -198,44 +173,6 @@ module.exports = async function () {
       }
     },
   };
-
-  // 根据平台添加特定配置
-  // if (process.platform === 'darwin') {
-  //   // 只在 CI 环境中启用签名
-  //   if (process.env.CI) {
-  //     console.log('Signing for macOS in CI');
-  //     config.mac = {
-  //       icon: 'buildResources/icon.icns',
-  //       identity: process.env.APPLE_IDENTITY,
-  //       target: [
-  //         {
-  //           target: 'dmg',
-  //           arch: ['x64', 'arm64'],
-  //         },
-  //       ],
-  //       category: 'public.app-category.developer-tools',
-  //       hardenedRuntime: true,
-  //       gatekeeperAssess: true,
-  //       entitlements: 'buildResources/entitlements.mac.plist',
-  //       entitlementsInherit: 'buildResources/entitlements.mac.plist',
-  //       signIgnore: [
-  //         'node_modules/sqlite3/lib/binding/napi-v6-darwin-unknown-arm64/node_sqlite3.node',
-  //         'node_modules/sqlite3/lib/binding/napi-v6-darwin-unknown-x64/node_sqlite3.node',
-  //         'app.asar.unpacked/node_modules/window-addon/window-addon-x64.node',
-  //         'app.asar.unpacked/node_modules/window-addon/window-addon-arm64.node',
-  //       ],
-  //       artifactName: '${productName}-${version}-${arch}-${os}-' + getBuildTime() + '.${ext}',
-  //       compression: 'store',
-  //       darkModeSupport: true,
-  //     };
-  //   }
-    
-  //   config.dmg = {
-  //     sign: false,
-  //     writeUpdateInfo: false,
-  //     format: 'ULFO',
-  //   };
-  // }
 
   return config;
 };

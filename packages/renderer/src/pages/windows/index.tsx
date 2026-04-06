@@ -188,8 +188,7 @@ const Windows = () => {
           if (!value) return '';
           const date = new Date(value);
           if (isNaN(date.getTime())) return '';
-          // 使用 UTC 时间显示，避免时区问题
-          return date.toLocaleString('zh-CN', { timeZone: 'UTC' });
+          return date.toLocaleString();
         },
       },
       {
@@ -201,8 +200,7 @@ const Windows = () => {
           if (!value) return '';
           const date = new Date(value);
           if (isNaN(date.getTime())) return '';
-          // 使用 UTC 时间显示，避免时区问题
-          return date.toLocaleString('zh-CN', { timeZone: 'UTC' });
+          return date.toLocaleString();
         },
       },
       {
@@ -262,18 +260,18 @@ const Windows = () => {
     columnWidth: 45,
   };
 
-  const windowData = useMemo(() => {
-    let filteredData = [...rawWindowData];
+  const filteredData = useMemo(() => {
+    let filtered = [...rawWindowData];
 
     // 按组过滤
     if (group > -1) {
-      filteredData = filteredData.filter(item => item.group_id === group);
+      filtered = filtered.filter(item => item.group_id === group);
     }
 
     // 按搜索关键词过滤
     if (searchValue) {
       const keyword = searchValue.toLowerCase();
-      filteredData = filteredData.filter(f =>
+      filtered = filtered.filter(f =>
         containsKeyword(f.group_name, keyword) ||
         containsKeyword(f.name, keyword) ||
         containsKeyword(f.id, keyword) ||
@@ -290,12 +288,14 @@ const Windows = () => {
       );
     }
 
+    return filtered;
+  }, [rawWindowData, group, searchValue, tagMap]);
+
+  const windowData = useMemo(() => {
     // 分页
     const startIndex = (currentPage - 1) * pageSize;
-    const paginatedData = filteredData.slice(startIndex, startIndex + pageSize);
-
-    return paginatedData;
-  }, [rawWindowData, group, searchValue, tagMap, currentPage, pageSize]);
+    return filteredData.slice(startIndex, startIndex + pageSize);
+  }, [filteredData, currentPage, pageSize]);
 
   const fetchWindowData = async () => {
     setLoading(true);
@@ -464,14 +464,14 @@ const Windows = () => {
     setLoading(true);
     if (id) {
       await WindowBridge?.open(id);
-      setLoading(false);
     } else {
       for (let index = 0; index < selectedRowKeys.length; index++) {
         const rowKey = selectedRowKeys[index];
         await WindowBridge?.open(rowKey);
       }
-      setLoading(false);
     }
+    await fetchWindowData();
+    setLoading(false);
   };
 
   const deleteWindows = () => {
@@ -626,7 +626,7 @@ const Windows = () => {
       <Flex justify="flex-end" align="center" className="page-pagination">
         <Pagination
           current={currentPage}
-          total={windowData.length}
+          total={filteredData.length}
           pageSize={pageSize}
           pageSizeOptions={[20, 50, 100]}
           showSizeChanger

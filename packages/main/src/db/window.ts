@@ -153,7 +153,7 @@ const update = async (id: number, updatedData: DB.Window) => {
   try {
     await db('window')
       .where({id})
-      .update({...updatedData, updated_at: db.fn.now()});
+      .update({...updatedData, updated_at: new Date().toISOString()});
     return {
       success: true,
       message: 'Window updated successfully.',

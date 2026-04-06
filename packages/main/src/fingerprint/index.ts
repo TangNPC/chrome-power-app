@@ -1,4 +1,4 @@
-import {join} from 'path';
+﻿import {join} from 'path';
 import {ProxyDB} from '../db/proxy';
 import {WindowDB} from '../db/window';
 // import {getChromePath} from './device';
@@ -204,6 +204,7 @@ export async function openFingerprintWindow(id: number, headless = false) {
       windowData?.localChromePath ? 'chrome' : (useLocalChrome ? 'chrome' : 'chromium'),
       windowData.profile_id,
     );
+    logger.info(`Opening window with profile_id: ${windowData.profile_id}, userDataDir: ${windowDataDir}`);
 
     // 确保目录存在并设置正确权限
     if (!existsSync(windowDataDir)) {
@@ -303,7 +304,6 @@ export async function openFingerprintWindow(id: number, headless = false) {
         }
       } else {
         launchParamter.push('--new-window');
-        launchParamter.push(`http://localhost:${getClientPort()}/#/start?windowId=${id}&serverPort=${getPort()}`);
       }
 
       // 添加调试参数（如果需要）
@@ -356,6 +356,8 @@ export async function openFingerprintWindow(id: number, headless = false) {
 
       chromeInstance.on('close', async () => {
         logger.info(`Chrome process exited at port ${chromePort}, closed time: ${new Date()}`);
+        logger.info(`Chrome user-data-dir: ${windowDataDir}`);
+        logger.info(`Chrome PID was: ${chromeInstance.pid}`);
         if (proxyType === 'socks5') {
           (proxyServer as Server<typeof IncomingMessage, typeof ServerResponse>)?.close(() => {
             logger.info('Socks5 Proxy server was closed.');
@@ -541,3 +543,4 @@ export default {
 
   closeFingerprintWindow,
 };
+

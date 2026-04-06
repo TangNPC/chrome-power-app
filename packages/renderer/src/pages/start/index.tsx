@@ -128,7 +128,7 @@ export default function Start() {
               {(() => {
                 if (!windowInfo.opened_at) return '-';
                 const d = new Date(windowInfo.opened_at);
-                return isNaN(d.getTime()) ? windowInfo.opened_at : d.toLocaleString('zh-CN', { timeZone: 'UTC' });
+                return isNaN(d.getTime()) ? windowInfo.opened_at : d.toLocaleString();
               })()}
             </Descriptions.Item>
             <Descriptions.Item label="缓存目录">{windowInfo.profile_id || '-'}</Descriptions.Item>
