@@ -46,6 +46,10 @@ interface SyncConfig {
   columns: number;
   size: {width: number; height: number};
 
+  // Cascade arrangement
+  cascadeSpacing: number;
+  cascadeSize: {width: number; height: number};
+
   // Multi-window sync
   masterWindowId: number | null;
   syncOptions: SyncOptions;
@@ -75,6 +79,8 @@ const Sync = () => {
     spacing: 10,
     columns: 3,
     size: {width: 0, height: 0},
+    cascadeSpacing: 20,
+    cascadeSize: {width: 450, height: 600},
     masterWindowId: null,
     syncOptions: defaultSyncOptions,
   };
@@ -383,9 +389,9 @@ const Sync = () => {
 
     const selectedWindows = windows.filter(w => selectedRowKeys.includes(w.id!));
     const pids = selectedWindows.map(w => w.pid!);
-    const cascadeOffset = syncConfig.spacing || 20;
-    const cascadeWidth = syncConfig.size.width || 450;
-    const cascadeHeight = syncConfig.size.height || 600;
+    const cascadeOffset = syncConfig.cascadeSpacing;
+    const cascadeWidth = syncConfig.cascadeSize.width;
+    const cascadeHeight = syncConfig.cascadeSize.height;
 
     SyncBridge.cascadeWindows({
       pids,
@@ -404,6 +410,11 @@ const Sync = () => {
       size: {
         width: syncConfig.size.width,
         height: allFields.height ?? 0,
+      },
+      cascadeSpacing: allFields.cascadeSpacing ?? 20,
+      cascadeSize: {
+        width: allFields.cascadeWidth ?? 450,
+        height: allFields.cascadeHeight ?? 600,
       },
     };
     setSyncConfig(newConfig);
@@ -523,7 +534,36 @@ const Sync = () => {
             <Button block type="primary" icon={<WindowsOutlined />} onClick={handleArrangeWindows} disabled={selectedRowKeys.length === 0}>
               {t('sync_arrange_button')}
             </Button>
-            <Button block type="default" icon={<DesktopOutlined />} onClick={handleCascadeWindows} disabled={selectedRowKeys.length === 0} style={{marginTop: 8}}>
+
+            <Divider style={{margin: '8px 0'}} />
+
+            <Text strong style={{marginBottom: 8, display: 'block'}}>{t('sync_cascade_settings')}</Text>
+            <Form form={arrangeForm} layout="vertical" initialValues={{
+              columns: syncConfig.columns,
+              spacing: syncConfig.spacing,
+              height: syncConfig.size.height !== 0 ? syncConfig.size.height : undefined,
+              cascadeSpacing: syncConfig.cascadeSpacing,
+              cascadeWidth: syncConfig.cascadeSize.width,
+              cascadeHeight: syncConfig.cascadeSize.height,
+            }} onValuesChange={onArrangeValuesChange}>
+              <Row gutter={8}>
+                <Col span={12}>
+                  <Form.Item label={t('sync_cascade_width')} name="cascadeWidth">
+                    <InputNumber min={200} max={2000} style={{width: '100%'}} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item label={t('sync_cascade_height')} name="cascadeHeight">
+                    <InputNumber min={200} max={2000} style={{width: '100%'}} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item label={t('sync_cascade_spacing')} name="cascadeSpacing">
+                <InputNumber min={0} max={100} style={{width: '100%'}} />
+              </Form.Item>
+            </Form>
+
+            <Button block type="default" icon={<DesktopOutlined />} onClick={handleCascadeWindows} disabled={selectedRowKeys.length === 0}>
               {t('sync_cascade_button')}
             </Button>
           </Space>
