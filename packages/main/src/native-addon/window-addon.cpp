@@ -152,7 +152,7 @@ private:
                !IsChromiumBrand(title);
     }
 
-    std::vector<WindowInfo> FindWindowsByPid(DWORD processId) {
+    std::vector<WindowInfo> FindWindowsByPid(DWORD processId, bool includeMinimized = true) {
         std::vector<WindowInfo> windows;
         HWND hwnd = nullptr;
 
@@ -160,29 +160,41 @@ private:
             DWORD pid = 0;
             GetWindowThreadProcessId(hwnd, &pid);
 
-            if (pid == processId && IsWindowVisible(hwnd) && !IsIconic(hwnd)) {
-                char className[256] = {0};
-                GetClassNameA(hwnd, className, sizeof(className));
+            // Check if window belongs to target process
+            if (pid != processId) continue;
+            
+            // Skip minimized windows if not including them
+            if (!includeMinimized && IsIconic(hwnd)) continue;
 
-                char title[256] = {0};
-                GetWindowTextA(hwnd, title, sizeof(title));
+            // Get window state info
+            bool isMinimized = IsIconic(hwnd) != 0;
+            bool isVisible = IsWindowVisible(hwnd) != 0;
+            
+            // Skip windows that are both minimized AND hidden (not our target)
+            if (!isVisible && !isMinimized) continue;
 
-                RECT rect;
-                GetWindowRect(hwnd, &rect);
+            char className[256] = {0};
+            GetClassNameA(hwnd, className, sizeof(className));
 
-                bool isExtension = IsExtensionWindow(title, className);
-                // 关键修复：主窗口识别逻辑同步更新
-                bool isMainWindow = IsChromiumBrand(title) &&
-                                  (GetWindowLong(hwnd, GWL_STYLE) & WS_OVERLAPPEDWINDOW);
+            char title[256] = {0};
+            GetWindowTextA(hwnd, title, sizeof(title));
 
-                if (isMainWindow || isExtension) {
-                    WindowInfo info;
-                    info.hwnd = hwnd;
-                    info.isExtension = isExtension;
-                    info.width = rect.right - rect.left;
-                    info.height = rect.bottom - rect.top;
-                    windows.push_back(info);
-                }
+            RECT rect;
+            // For minimized windows, GetWindowRect returns last known position
+            GetWindowRect(hwnd, &rect);
+
+            bool isExtension = IsExtensionWindow(title, className);
+            bool isMainWindow = IsChromiumBrand(title) &&
+                              (GetWindowLong(hwnd, GWL_STYLE) & WS_OVERLAPPEDWINDOW);
+
+            if (isMainWindow || isExtension) {
+                WindowInfo info;
+                info.hwnd = hwnd;
+                info.isExtension = isExtension;
+                // Use last known size if minimized, or current size otherwise
+                info.width = rect.right - rect.left;
+                info.height = rect.bottom - rect.top;
+                windows.push_back(info);
             }
         }
         return windows;
