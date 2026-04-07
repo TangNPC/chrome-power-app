@@ -476,9 +476,9 @@ const Sync = () => {
       </Flex>
 
       {/* Main Content */}
-      <div style={{ display: 'flex', flex: 1, gap: 16 }}>
+      <div style={{ display: 'flex', flex: 1, gap: 16, overflow: 'hidden', alignItems: 'stretch' }}>
         {/* Left: Window List */}
-        <Card variant="borderless" style={{ flex: 2, overflow: 'hidden' }}>
+        <Card variant="borderless" style={{ flex: 2 }} className="page-card">
           <Flex align="center" gap={16} style={{ marginBottom: 16 }}>
             <Title level={5} style={{margin: 0}}><DesktopOutlined style={{marginRight: 8}} />{t('sync_opened_windows')}</Title>
             {!isMacOS && masterWindow && <Text type="secondary">{masterInfoText}</Text>}
@@ -487,7 +487,7 @@ const Sync = () => {
             dataSource={windows}
             rowKey="id"
             rowSelection={rowSelection}
-            scroll={{y: tableScrollY}}
+            scroll={{y: 'auto'}}
             columns={columns}
             pagination={false}
             onRow={(record) => ({
@@ -501,7 +501,7 @@ const Sync = () => {
         </Card>
 
         {/* Right: Control Panel */}
-        <Card variant="borderless" style={{ flex: 1 }} title={<Space><SettingOutlined /><span>{t('sync_control_panel')}</span></Space>}>
+        <Card variant="borderless" style={{ flex: 1, overflow: 'hidden' }} title={<Space><SettingOutlined /><span>{t('sync_control_panel')}</span></Space>}>
           <Space direction="vertical" style={{width: '100%'}} size="middle">
             <div>
               <Text strong style={{marginBottom: 8, display: 'block'}}>{t('sync_display')}</Text>

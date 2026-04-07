@@ -504,7 +504,7 @@ const Proxy = () => {
           loading={loading}
           rowSelection={rowSelection}
           dataSource={proxyData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
-          scroll={{x: 1500, y: tableScrollY}}
+          scroll={{x: 1500, y: 'auto'}}
           pagination={false}
         />
       </Card>

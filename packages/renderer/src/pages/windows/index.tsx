@@ -619,7 +619,7 @@ const Windows = () => {
           loading={loading}
           rowSelection={rowSelection}
           dataSource={windowData}
-          scroll={{ x: 1500, y: tableScrollY }}
+          scroll={{ y: 'auto' }}
           pagination={false}
           onRow={(record) => ({
             onDoubleClick: async () => {

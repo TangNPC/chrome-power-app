@@ -53,9 +53,14 @@
   border: none !important;
 }
 
-/* 表格固定最大高度 */
+/* 卡片内边距 */
+.ant-card .ant-card-body {
+  padding: 10px !important;
+}
+
+/* 表格高度 */
 .ant-table-wrapper .ant-table-body {
-  max-height: 730px !important;
+  max-height: 100vh;
 }
 
 /* 通用样式 */
@@ -75,4 +80,28 @@
   color: #faad14;
   font-size: 22px;
   margin-right: 12px;
+}
+
+/* 表格滚动条样式 */
+.ant-table-wrapper .ant-table-body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ant-table-wrapper .ant-table-body::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.ant-table-wrapper .ant-table-body::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 4px;
+}
+
+.ant-table-wrapper .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+.ant-table-wrapper .ant-table-body::-webkit-scrollbar-corner {
+  background: #f0f0f0;
 }
