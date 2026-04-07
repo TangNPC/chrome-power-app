@@ -138,7 +138,8 @@ module.exports = async function () {
 
       console.log(`Copying window-addon for ${electronPlatformName}-${archString}...`);
 
-      const sourcePath = path.join(__dirname, `packages/main/src/native-addon/build/Release/${electronPlatformName}-${archString}/window-addon.node`);
+      // native addon 编译产物直接放在 Release 目录下，没有按平台/架构分子目录
+      const sourcePath = path.join(__dirname, 'packages/main/src/native-addon/build/Release/window-addon.node');
 
       // Mac 应用有 .app 包结构，需要特殊处理路径
       let targetDir;
